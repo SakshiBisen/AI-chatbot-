@@ -10,7 +10,9 @@ const ChatBot = () => {
 
   const [socket, setSocket] = useState(null);
   const [message, setMessage] = useState([]);
-  const BackendUrl = import.meta.env.VITE_BACKEND_URL
+
+  // default to localhost:3000 for local development if env var is missing
+  const BackendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
 
   const { register, handleSubmit, resetField } = useForm();
 
@@ -19,7 +21,7 @@ const ChatBot = () => {
   const submitHandler = ({ user_message }) => {
     const userMsg = user_message.trim();
     if (!userMsg) return;
-    
+
 
     let usernewMsg = {
       sender: "user",
@@ -33,6 +35,11 @@ const ChatBot = () => {
 
     setMessage((prev) => [...prev, usernewMsg]);
 
+    if (!socket || (socket && !socket.connected)) {
+      console.warn("Socket is not connected yet. Message not sent to backend.");
+      return;
+    }
+
     socket.emit("ai-message", user_message);
     resetField("user_message");
   };
@@ -44,7 +51,7 @@ const ChatBot = () => {
 
 
     socketInstance.on("ai-message-response", (data) => {
-      console.log(data," aa reha h ")
+      console.log(data, " aa reha h ")
       let botnewMsg = {
         sender: "bot",
         text: data,
@@ -68,7 +75,7 @@ const ChatBot = () => {
   }, [message]);
 
   return (
-    <div className="chat-container">
+    <div className="chat-container ">
       <div className="chat-box">
         <h1 className="chat-title">AI Chatbot</h1>
         {/* Messages */}

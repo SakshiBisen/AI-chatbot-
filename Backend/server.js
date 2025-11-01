@@ -5,11 +5,11 @@ const { Server } = require("socket.io");
 const generateResponse = require("./src/server/ai-server");
 
 const httpServer = createServer(app);
-const FrontendUrl = process.env.FRONTENT_URL;
+// Use FRONTEND_URL (fixed spelling). If not provided, allow all origins in development.
+const FrontendUrl = process.env.FRONTEND_URL || "*";
 
 
-
-const io = new Server(httpServer, { 
+const io = new Server(httpServer, {
   cors: {
     origin: FrontendUrl,
   },
@@ -27,28 +27,28 @@ io.on("connection", (socket) => {
 
 
 
-socket.on("ai-message", async (data) => {
-  console.log("AI message received:", data);
-  try {
-    chatHistory.push({
-      role: "user",
-      parts: [{ text: data }]
-    });
+  socket.on("ai-message", async (data) => {
+    console.log("AI message received:", data);
+    try {
+      chatHistory.push({
+        role: "user",
+        parts: [{ text: data }]
+      });
 
-    const response = await generateResponse(chatHistory);
+      const response = await generateResponse(chatHistory);
 
-    chatHistory.push({
-      role: "model",
-      parts: [{ text: response }]
-    });
+      chatHistory.push({
+        role: "model",
+        parts: [{ text: response }]
+      });
 
 
-    socket.emit("ai-message-response", response);
-  } catch (err) {
-    console.error("AI error:", err);
-    socket.emit("ai-message-response", "Sorry, I had trouble responding.");
-  }
-});
+      socket.emit("ai-message-response", response);
+    } catch (err) {
+      console.error("AI error:", err);
+      socket.emit("ai-message-response", "Sorry, I had trouble responding.");
+    }
+  });
 
 
 });
